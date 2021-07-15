@@ -199,7 +199,7 @@ class DrawableCurve:
                 dataCopy.offset = -defaultDepth / 2
 
             objCopy = curveObj.copy()
-            objCopy.name = curveObj.name + str(idSuffix).zfill(2)
+            objCopy.name = curveObj.name
             objCopy.data = dataCopy
             
             if(dataCopy.shape_keys != None):
@@ -956,7 +956,22 @@ class CreateWritingAnimOp(bpy.types.Operator):
             animType = OBJTYPE_NONMODIFIER
             retain = 'Copy'
             liftAxis = 2 #Z in case of text
-    
+
+            ctx = bpy.context.copy()
+            ctx['active_object'] = bpy.context.selected_objects[0]
+            ctx['selected_objects'] = bpy.context.selected_objects
+            bpy.ops.object.join(ctx)
+            text = bpy.context.selected_objects[0]
+            area = next(area for area in bpy.context.screen.areas if area.type == 'VIEW_3D')
+            region = next(region for region in area.regions if region.type == 'WINDOW')
+            ctx = bpy.context.copy()
+            ctx['area'] = area
+            ctx['region'] = region
+            bpy.ops.mesh.primitive_plane_add(ctx, align='VIEW')
+            text.rotation_euler = bpy.context.selected_objects[0].rotation_euler
+            bpy.ops.object.delete()
+            text.select_set(True)
+
         endFrame = main(retain, DEFAULT_DEPTH, startFrame, totalFrames,
             liftAxis, maxLift, transitionSpeed, alignToVert, proportionalLift, animType, 
                 copyPropObj, rgba, customWriter, reverseLift, resetLocation)
